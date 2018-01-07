@@ -1,25 +1,60 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+Course 5 Week 2 Assignment
 
+1. Set working directory, read and import the data, get per day steps
+```{r echo=TRUE} 
+setwd("C:/Users/abmarkowitz/Documents/coursera")
+data <- read.csv("course5week2data.csv")
+head(data)
+dataByDay <- aggregate(steps ~ date, sum, data=data)
+```
 
-## Loading and preprocessing the data
+2. What is the mean and median total number of steps taken per day?
+```{r echo=TRUE}
+mean(dataByDay$steps, na.rm = TRUE)
+hist(dataByDay$steps)
+median(dataByDay$steps, na.rm = TRUE)
+```
 
+3. What is the average daily activity pattern? Which interval contains the max number of steps?
+```{r echo = TRUE}
+dataByTime <- aggregate(steps ~ interval, mean, data=data)
+plot(dataByTime$interval, dataByTime$steps, type ="l")
+which.max(dataByTime$steps)
+dataByTime[which.max(dataByTime$steps),]
+```
 
+4. Find the number of NAs, replace them with the average number of steps, and recalculate mean and median.
+```{r echo = TRUE}
+sum(is.na(data$steps))
+data$steps[is.na(data$steps)] <- mean(data$steps, na.rm = TRUE)
+NoNAs <- data
+sum(is.na(NoNAs))
+NoNAsByDay <- aggregate(steps ~ date, sum, data=NoNAs)
+mean(NoNAsByDay$steps, na.rm = TRUE)
+hist(NoNAsByDay$steps)
+median(NoNAsByDay$steps, na.rm = TRUE)
 
-## What is mean total number of steps taken per day?
+```
 
+Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+-The mean does not change, as we replaced missing value with the average value. However, the median increased slightly. 
 
+5. Are there differences in activity patterns between weekdays and weekends?
+-Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 
-## What is the average daily activity pattern?
+```{r}
+data$date <- as.Date(data$date, "%m/%d/%Y")
+data$day <- weekdays(data$date)
+weekdays1 <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
+weekend1 <- c("Saturday", "Sunday")
+data$day[data$day %in% weekdays1] <- "weekday"
+data$day[data$day %in% weekend1] <- "weekend"
 
+weekdays <- subset(data, day == 'weekday', select = steps:day)
+weekends <- subset(data, day == "weekend", select = steps:day)
 
+par(mfrow=c(2,1))
+plot(weekdays$interval, weekdays$steps, type = "l")
+plot(weekends$interval, weekends$steps, type = "l")
 
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+```
